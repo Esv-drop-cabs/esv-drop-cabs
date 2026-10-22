@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ESV Drop Cabs | Admin Fare Manager</title>
+<style>
+:root{--navy:#10233f;--blue:#1459a6;--gold:#f4b63e;--bg:#f3f6fb;--ink:#17243a;--muted:#66758a;--line:#dce4ef;--green:#16834a;--red:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink)}
+header{background:linear-gradient(120deg,#10233f,#1459a6);color:white;padding:22px max(18px,calc((100vw - 1100px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}.mark{width:46px;height:46px;border-radius:14px;background:var(--gold);color:#10233f;display:grid;place-items:center;font-weight:900;font-size:20px}.brand h1{margin:0;font-size:20px}.brand p{margin:2px 0 0;color:#dbeafe;font-size:12px}
+main{max-width:1100px;margin:24px auto;padding:0 16px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 6px 22px #10233f0a;margin-bottom:16px}.card h2{margin:0 0 6px;font-size:19px}.muted{color:var(--muted);font-size:13px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.field{display:flex;flex-direction:column;gap:6px}.field label{font-weight:650;font-size:13px}.field input,.field select{width:100%;padding:12px;border:1px solid #cbd6e5;border-radius:10px;font:inherit;background:white;color:var(--ink)}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.btn{border:0;border-radius:10px;padding:11px 15px;font-weight:750;cursor:pointer;font:inherit}.primary{background:var(--blue);color:#fff}.gold{background:var(--gold);color:#18243a}.plain{background:#edf2f8;color:#26354b}.danger{background:#fff0ef;color:var(--red)}.hidden{display:none!important}.status{padding:11px 13px;border-radius:10px;background:#eef6ff;color:#164a83;font-size:13px;margin-top:12px;white-space:pre-wrap}.status.ok{background:#eaf8ef;color:#126335}.status.err{background:#fff0ef;color:#9e2119}.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:16px}.stat{background:#f6f8fc;border:1px solid var(--line);border-radius:12px;padding:13px}.stat strong{display:block;font-size:22px}.stat span{font-size:12px;color:var(--muted)}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{text-align:left;padding:11px 9px;border-bottom:1px solid var(--line);font-size:13px}th{color:var(--muted);font-weight:700}td:last-child{white-space:nowrap}.tablewrap{overflow:auto}.smallbtn{padding:7px 10px;font-size:12px}.pill{display:inline-block;background:#eaf8ef;color:#126335;border-radius:99px;padding:4px 8px;font-size:11px;font-weight:750}
+@media(max-width:650px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}header{padding:18px}.card{padding:16px}main{margin-top:14px}table{min-width:700px}}
+</style>
+</head>
+<body>
+<header><div class="brand"><div class="mark">ESV</div><div><h1>Fare Manager</h1><p>ESV Drop Cabs · Admin panel</p></div></div><div class="row"><span id="connection" class="pill">Not connected</span><button id="logout" class="btn plain hidden">Sign out</button></div></header>
+<main>
+<section id="setup" class="card">
+<h2>Connect your Firebase project</h2>
+<p class="muted">This is a separate admin website. To sync fares to customers on every device, connect it to your own Firebase project. Your Firebase web config is not an admin password; never share your password or service-account private key.</p>
+<div class="grid">
+<div class="field"><label>Firebase API key</label><input id="apiKey" value="AIzaSyAd-LkCMb10FKtsH8zHmIXeaYEJ4o9YXYE" placeholder="AIza..."></div>
+<div class="field"><label>Auth domain</label><input id="authDomain" value="esv-drop-cabs.firebaseapp.com" placeholder="your-project.firebaseapp.com"></div>
+<div class="field"><label>Project ID</label><input id="projectId" value="esv-drop-cabs" placeholder="your-project-id"></div>
+<div class="field"><label>App ID</label><input id="appId" value="1:820608552246:web:c199738b984cb95a1b3797" placeholder="1:...:web:..."></div>
+</div><div class="row" style="margin-top:14px"><button id="connect" class="btn primary">Connect Firebase</button><button id="clearConfig" class="btn plain">Clear fields</button></div>
+<div id="setupMsg" class="status">Step 1: Create a Firebase project, enable Email/Password Authentication and Firestore, then paste the web app config here.</div>
+</section>
+<section id="loginCard" class="card hidden"><h2>Admin sign in</h2><p class="muted">Use the admin account you created in Firebase Authentication.</p><div class="grid"><div class="field"><label>Admin email</label><input id="email" type="email" autocomplete="username"></div><div class="field"><label>Password</label><input id="password" type="password" autocomplete="current-password"></div></div><div class="row" style="margin-top:14px"><button id="login" class="btn primary">Sign in</button></div><div id="loginMsg" class="status">Admin accounts must be created in Firebase Console by the project owner.</div></section>
+<section id="dashboard" class="hidden">
+<div class="card"><div class="row" style="justify-content:space-between"><div><h2>Fare settings</h2><p class="muted">Route-specific fares override the per-kilometre calculation. Values are in INR (₹).</p></div><span class="pill">Live database</span></div>
+<div class="stats"><div class="stat"><strong id="routeCount">0</strong><span>Saved routes</span></div><div class="stat"><strong id="rateCount">0</strong><span>Vehicle rates</span></div><div class="stat"><strong id="updatedAt">—</strong><span>Last update (local)</span></div></div>
+</div>
+<div class="card"><h2>Per-kilometre rates</h2><p class="muted">Used for estimates when a route-specific fare has not been entered.</p>
+<div class="grid">
+<div class="field"><label>Hatchback ₹ / km</label><input id="kmHatchback" type="number" min="0" step="0.5"></div>
+<div class="field"><label>Sedan ₹ / km</label><input id="kmSedan" type="number" min="0" step="0.5"></div>
+<div class="field"><label>SUV ₹ / km</label><input id="kmSUV" type="number" min="0" step="0.5"></div>
+<div class="field"><label>Minimum fare (₹) — optional</label><input id="minimumFare" type="number" min="0" step="10" value="0"></div>
+</div><div class="row" style="margin-top:14px"><button id="saveRates" class="btn primary">Save per-km rates</button></div><div id="rateMsg" class="status">Enter your actual business rates before publishing.</div></div>
+<div class="card"><h2 id="routeFormTitle">Add route fare</h2><p class="muted">Enter a route name and optional distance. Enter each vehicle's fixed fare to override per-km pricing for this route. Leave a fare blank to use per-km estimate.</p>
+<div class="grid">
+<div class="field"><label>Pickup / From</label><input id="from" placeholder="e.g. Chennai"></div>
+<div class="field"><label>Destination / To</label><input id="to" placeholder="e.g. Hosur"></div>
+<div class="field"><label>Distance (km, one way)</label><input id="distance" type="number" min="0" step="0.1" placeholder="e.g. 310"></div>
+<div class="field"><label>Route status</label><select id="active"><option value="true">Published to customers</option><option value="false">Hidden / draft</option></select></div>
+<div class="field"><label>Hatchback fixed fare (₹)</label><input id="fareHatchback" type="number" min="0" step="10" placeholder="Blank = per-km estimate"></div>
+<div class="field"><label>Sedan fixed fare (₹)</label><input id="fareSedan" type="number" min="0" step="10" placeholder="Blank = per-km estimate"></div>
+<div class="field"><label>SUV fixed fare (₹)</label><input id="fareSUV" type="number" min="0" step="10" placeholder="Blank = per-km estimate"></div>
+</div><div class="row" style="margin-top:14px"><button id="saveRoute" class="btn primary">Save route</button><button id="resetRoute" class="btn plain">Clear form</button></div><div id="routeMsg" class="status">No fares are pre-filled because your actual prices have not been provided.</div></div>
+<div class="card"><div class="row" style="justify-content:space-between"><div><h2>Route list</h2><p class="muted">Edit, publish/unpublish, or delete routes.</p></div><button id="refresh" class="btn plain">Refresh</button></div><div class="tablewrap"><table><thead><tr><th>Route</th><th>Distance</th><th>Hatchback</th><th>Sedan</th><th>SUV</th><th>Status</th><th>Actions</th></tr></thead><tbody id="routesBody"><tr><td colspan="7">Loading…</td></tr></tbody></table></div></div>
+</section>
+<section class="card"><h2>Customer fare page</h2><p class="muted">Once Firebase is connected and fares are saved, upload <code>customer.html</code> to your hosting. It reads the same public fare data and updates automatically when you save changes here.</p><a href="customer.html">Open customer fare page</a></section>
+</main>
+<script type="module">
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const $=id=>document.getElementById(id);
+let app,auth,db,unsubRoutes=null,unsubRates=null,editingId=null,routes=[];
+const configFields=["apiKey","authDomain","projectId","appId"];
+function msg(id,text,type=""){const el=$(id);el.textContent=text;el.className="status "+type}
+function show(id,on=true){$(id).classList.toggle("hidden",!on)}
+function cleanNum(id){const v=$(id).value.trim();return v===""?null:Number(v)}
+function money(v){return v===null||v===undefined||v===""?"—":"₹"+Number(v).toLocaleString("en-IN")}
+function routeId(from,to){return (from.trim()+"__"+to.trim()).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,100)}
+function saveConfigToInputs(){try{const c=JSON.parse(localStorage.getItem("esvFirebaseConfig")||"{}");for(const k of configFields)$(k).value=c[k]||""}catch{}}
+async function connect(){
+ const cfg={apiKey:$("apiKey").value.trim(),authDomain:$("authDomain").value.trim(),projectId:$("projectId").value.trim(),appId:$("appId").value.trim()};
+ if(Object.values(cfg).some(v=>!v)){msg("setupMsg","Fill all four Firebase web config fields first.","err");return}
+ try{localStorage.setItem("esvFirebaseConfig",JSON.stringify(cfg));app=getApps().length?getApps()[0]:initializeApp(cfg);auth=getAuth(app);db=getFirestore(app);
+ show("loginCard");$("connection").textContent="Firebase connected";$("connection").style.background="#eaf8ef";$("connection").style.color="#126335";msg("setupMsg","Firebase initialized. Now sign in with your admin email and password.","ok");
+ onAuthStateChanged(auth,user=>{show("dashboard",!!user);show("logout",!!user);show("loginCard",!user);if(user){$("connection").textContent="Signed in";startLive()}else{stopLive()}});
+ }catch(e){msg("setupMsg","Could not connect: "+e.message,"err")}
+}
+function stopLive(){if(unsubRoutes)unsubRoutes();if(unsubRates)unsubRates();unsubRoutes=unsubRates=null}
+function startLive(){
+ stopLive();
+ unsubRoutes=onSnapshot(collection(db,"routes"),snap=>{routes=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.from||"").localeCompare(b.from||""));renderRoutes();$("routeCount").textContent=routes.length},e=>msg("routeMsg","Routes read failed: "+e.message,"err"));
+ unsubRates=onSnapshot(doc(db,"settings","rates"),snap=>{const d=snap.exists()?snap.data():{};for(const v of ["Hatchback","Sedan","SUV"])$("km"+v).value=d["km"+v]??"";$("minimumFare").value=d.minimumFare??0;$("rateCount").textContent=["Hatchback","Sedan","SUV"].filter(v=>d["km"+v]!==undefined).length;$("updatedAt").textContent=d.updatedAt?.toDate?d.updatedAt.toDate().toLocaleTimeString():"—"},e=>msg("rateMsg","Rate read failed: "+e.message,"err"));
+}
+async function login(){try{await signInWithEmailAndPassword(auth,$("email").value.trim(),$("password").value);msg("loginMsg","Signed in.","ok")}catch(e){msg("loginMsg","Sign-in failed: "+e.message,"err")}}
+async function saveRates(){try{const values={};for(const v of ["Hatchback","Sedan","SUV"]){const n=cleanNum("km"+v);if(n===null||n<0)throw Error("Enter a valid non-negative per-km rate for "+v)}for(const v of ["Hatchback","Sedan","SUV"])values["km"+v]=cleanNum("km"+v);values.minimumFare=cleanNum("minimumFare")||0;values.updatedAt=serverTimestamp();await setDoc(doc(db,"settings","rates"),values,{merge:true});msg("rateMsg","Per-km rates saved. Customer page will update automatically.","ok")}catch(e){msg("rateMsg",e.message,"err")}}
+function resetRoute(){editingId=null;["from","to","distance","fareHatchback","fareSedan","fareSUV"].forEach(id=>$(id).value="");$("active").value="true";$("routeFormTitle").textContent="Add route fare";$("saveRoute").textContent="Save route"}
+async function saveRoute(){try{const from=$("from").value.trim(),to=$("to").value.trim(),distance=cleanNum("distance");if(!from||!to)throw Error("Enter both pickup and destination.");if(distance===null||distance<=0)throw Error("Enter distance greater than 0 km.");const data={from,to,distance,active:$("active").value==="true",fares:{Hatchback:cleanNum("fareHatchback"),Sedan:cleanNum("fareSedan"),SUV:cleanNum("fareSUV")},updatedAt:serverTimestamp()};const id=editingId||routeId(from,to);await setDoc(doc(db,"routes",id),data);msg("routeMsg","Route saved successfully. Customer page will update automatically.","ok");resetRoute()}catch(e){msg("routeMsg",e.message,"err")}}
+function renderRoutes(){const body=$("routesBody");if(!routes.length){body.innerHTML='<tr><td colspan="7">No routes yet. Add your first route above.</td></tr>';return}body.innerHTML=routes.map(r=>`<tr><td><strong>${esc(r.from)} → ${esc(r.to)}</strong></td><td>${Number(r.distance||0).toLocaleString("en-IN")} km</td><td>${money(r.fares?.Hatchback)}</td><td>${money(r.fares?.Sedan)}</td><td>${money(r.fares?.SUV)}</td><td>${r.active?'<span class="pill">Published</span>':'Draft'}</td><td><button class="btn plain smallbtn" data-edit="${esc(r.id)}">Edit</button> <button class="btn danger smallbtn" data-delete="${esc(r.id)}">Delete</button></td></tr>`).join("");body.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>editRoute(b.dataset.edit));body.querySelectorAll("[data-delete]").forEach(b=>b.onclick=()=>removeRoute(b.dataset.delete))}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function editRoute(id){const r=routes.find(x=>x.id===id);if(!r)return;editingId=id;$("from").value=r.from||"";$("to").value=r.to||"";$("distance").value=r.distance??"";$("active").value=String(!!r.active);for(const v of ["Hatchback","Sedan","SUV"])$("fare"+v).value=r.fares?.[v]??"";$("routeFormTitle").textContent="Edit route fare";$("saveRoute").textContent="Update route";window.scrollTo({top:0,behavior:"smooth"})}
+async function removeRoute(id){const r=routes.find(x=>x.id===id);if(!r||!confirm(`Delete route ${r.from} → ${r.to}?`))return;try{await deleteDoc(doc(db,"routes",id));msg("routeMsg","Route deleted.","ok")}catch(e){msg("routeMsg","Delete failed: "+e.message,"err")}}
+$("connect").onclick=connect;$("clearConfig").onclick=()=>{configFields.forEach(k=>$(k).value="");localStorage.removeItem("esvFirebaseConfig")};$("login").onclick=login;$("logout").onclick=()=>signOut(auth);$("saveRates").onclick=saveRates;$("saveRoute").onclick=saveRoute;$("resetRoute").onclick=resetRoute;$("refresh").onclick=()=>startLive();saveConfigToInputs();
+</script>
+</body></html>
